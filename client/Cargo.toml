@@ -1,0 +1,21 @@
+[package]
+name = "rafwne-client"
+version = "0.1.0"
+edition = "2024"
+rust-version = "1.90.0"
+
+[dependencies]
+anyhow = "1.0.100"
+aws-nitro-enclaves-cose = "0.5.2"
+aws-lc-rs = "1.15.4"
+base64 = "0.22.1"
+hex = "0.4.3"
+openssl = "0.10.75"
+p256 = { version = "0.13.2", features = ["ecdh"] }
+serde = { version = "1.0.228", features = ["derive"] }
+serde_bytes = "0.11.19"
+serde_json = "1.0.149"
+serde_cbor = "0.11.2"
+ureq = "3.1.4"
+x509-parser = "0.18.0"
+p384 = { version = "0.13.1", features = ["ecdsa", "sha384"] }

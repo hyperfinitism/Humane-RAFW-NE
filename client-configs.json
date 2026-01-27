@@ -1,0 +1,11 @@
+
+{
+	"server-ip": "127.0.0.1",
+	"server-port": 8080,
+	"PCRs": {
+		"0": "ae091d48b468539560a6cb7649fbc70ef5866d20ac82898f7b77eb359c2c23e4ccf2107d9d4d10a198ee7fc1d5541ef3",
+		"1": "0343b056cd8485ca7890ddd833476d78460aed2aa161548e4e26bedf321726696257d623e8805f3f605946b3d8b0c6aa",
+		"2": "7c2b87a4ca3c0cb43d39434b6717806fecd302be3fa742c1a30835ede59799c8cce2eb93e16c7d7dfb8e25fa22c730f5"
+	},
+	"print-attestation-json": true
+}

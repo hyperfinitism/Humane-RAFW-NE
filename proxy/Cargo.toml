@@ -1,0 +1,12 @@
+[package]
+name = "rafwne-proxy"
+version = "0.1.0"
+edition = "2024"
+rust-version = "1.90.0"
+
+[dependencies]
+anyhow = "1.0.100"
+clap = { version = "4.5.54", features = ["derive"] }
+tiny_http = "0.12.0"
+vsock = "0.5.2"
+
