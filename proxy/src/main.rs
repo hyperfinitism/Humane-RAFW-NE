@@ -8,7 +8,7 @@ use std::io::{Read, Write};
 use tiny_http::{Header, Method, Response, Server, StatusCode};
 use vsock::{VsockAddr, VsockStream};
 
-const MAX_BODY: usize = 128 * 1024;
+const LENGTH_PREFIX_SIZE: usize = 4;
 
 #[derive(Debug, Parser)]
 #[command(name = "rafwne-proxy")]
@@ -32,16 +32,21 @@ struct Args {
     /// Enclave vsock port to connect to.
     #[arg(long, default_value_t = 5000)]
     vsock_port: u32,
+
+    /// Vsock buffer size in bytes.
+    #[arg(long, default_value_t = 8192)]
+    vsock_buffer_size: usize,
 }
 
 fn main() -> Result<()> {
     let args = Args::parse();
     let bind = format!("{}:{}", args.ip, args.port);
+    let max_body_size = args.vsock_buffer_size - LENGTH_PREFIX_SIZE;
 
     let server = Server::http(&bind).map_err(|e| anyhow!(e.to_string()))?;
     eprintln!(
-        "proxy listening on http://{bind} -> vsock cid={} port={}",
-        args.cid, args.vsock_port
+        "proxy listening on http://{bind} -> vsock cid={} port={} (buffer_size={}, max_body={})",
+        args.cid, args.vsock_port, args.vsock_buffer_size, max_body_size
     );
 
     for mut req in server.incoming_requests() {
@@ -55,7 +60,7 @@ fn main() -> Result<()> {
         let mut body = Vec::new();
         if req
             .as_reader()
-            .take(MAX_BODY as u64)
+            .take(max_body_size as u64)
             .read_to_end(&mut body)
             .is_err()
         {
@@ -66,7 +71,7 @@ fn main() -> Result<()> {
             continue;
         }
 
-        match forward_to_enclave(args.cid, args.vsock_port, &body) {
+        match forward_to_enclave(args.cid, args.vsock_port, &body, args.vsock_buffer_size) {
             Ok(resp_body) => {
                 let mut resp = Response::from_data(resp_body);
                 let hdr = Header::from_bytes(&b"content-type"[..], &b"application/json"[..])
@@ -84,16 +89,30 @@ fn main() -> Result<()> {
     Ok(())
 }
 
-fn forward_to_enclave(cid: u32, port: u32, body: &[u8]) -> Result<Vec<u8>> {
+fn forward_to_enclave(cid: u32, port: u32, body: &[u8], buffer_size: usize) -> Result<Vec<u8>> {
     let addr = VsockAddr::new(cid, port);
     let mut stream = VsockStream::connect(&addr)?;
+
+    // Write request with 4-byte big-endian length prefix
+    let req_len = body.len() as u32;
+    stream.write_all(&req_len.to_be_bytes())?;
     stream.write_all(body)?;
 
-    let mut buf = vec![0u8; 8192];
-    let n = stream.read(&mut buf)?;
-    if n == 0 {
-        return Err(anyhow!("empty response from enclave"));
+    // Read 4-byte big-endian length prefix for response
+    let mut len_buf = [0u8; LENGTH_PREFIX_SIZE];
+    stream.read_exact(&mut len_buf)?;
+    let resp_len = u32::from_be_bytes(len_buf) as usize;
+
+    if resp_len > buffer_size - LENGTH_PREFIX_SIZE {
+        return Err(anyhow!(
+            "response too large: {} > {}",
+            resp_len,
+            buffer_size - LENGTH_PREFIX_SIZE
+        ));
     }
-    buf.truncate(n);
+
+    // Read the exact amount of data
+    let mut buf = vec![0u8; resp_len];
+    stream.read_exact(&mut buf)?;
     Ok(buf)
 }
