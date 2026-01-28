@@ -1,6 +1,6 @@
 SHELL := /bin/bash
 
-.PHONY: help setup-docker setup-nitro-cli setup-client build-enclave build-proxy build-client run-enclave run-proxy run-client terminate-enclave
+.PHONY: help setup-docker setup-nitro-cli setup-client download-root-ca build-enclave build-proxy build-client run-enclave run-proxy run-client terminate-enclave
 
 ENCLAVE_CID ?= 16
 ENCLAVE_MEMORY ?= 512
@@ -13,16 +13,17 @@ help:
 	@echo "Targets:"
 	@echo "  help              Show this help message"
 	@echo "  For Parent VM:"
-	@echo "    setup-docker      Install Docker (requires Ubuntu + sudo) for Parent VM"
-	@echo "    setup-nitro-cli   Install Nitro Enclaves Driver and CLI for Parent VM"
+	@echo "    setup-docker      Install Docker (requires Ubuntu + sudo)"
+	@echo "    setup-nitro-cli   Install Nitro Enclaves Driver and CLI"
 	@echo "    build-enclave     Build enclave Docker image and create EIF file"
 	@echo "    build-proxy       Build vsock proxy"
 	@echo "    run-enclave       Run Nitro Enclave"
 	@echo "    run-proxy         Run vsock proxy"
 	@echo "    terminate-enclave Terminate Nitro Enclave"
 	@echo "  For Client:"
-	@echo "    setup-client      Install Rust and AWS Nitro Enclaves root certificate"
+	@echo "    setup-client      Install Rust and dependencies"
 	@echo "    build-client      Build client application"
+	@echo "    download-root-ca  Download AWS Nitro Enclaves root CA certificate"
 	@echo "    run-client        Run client"
 
 setup-docker:
@@ -36,6 +37,10 @@ setup-nitro-cli:
 setup-client:
 	@echo "Running scripts/setup-client.sh"
 	@bash ./scripts/setup-client.sh
+
+download-root-ca:
+	@echo "Running scripts/download-root-ca.sh"
+	@bash ./scripts/download-root-ca.sh
 
 build-enclave:
 	@echo "Building Docker image"

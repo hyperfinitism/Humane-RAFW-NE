@@ -1,4 +1,7 @@
 .DS_Store
 
+AWS_NitroEnclaves_Root-G1.zip
+root.pem
+
 target/
 debug/

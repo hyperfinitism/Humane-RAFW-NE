@@ -6,33 +6,48 @@ This repository demonstrates a simple end-to-end flow against an AWS Nitro Encla
 - **Parent VM**: An AWS EC2 instance (Ubuntu 24.04) with Nitro Enclaves enabled. Runs the Enclave and the vsock proxy.
 - **Client**: Can run on any machine, but this README assumes you run it on the Parent VM (localhost).
 
-## Tested environment (detailed)
+## Tested environments
+
+Tested on the Parent VM environments listed below. The Server (vsock proxy) runs on localhost on the Parent VM, and the Client also runs on the same Parent VM.
 
 ### Parent VM (AWS EC2)
+
+#### Ubuntu 24.04 (x86_64)
 
 - **Instance type**: `c5.xlarge`
   - vCPUs: 4
   - Memory: 8 GiB
-  - CPU arch: `x86_64`
+  - CPU arch: x86_64
 - **AMI**: Ubuntu Server 24.04 LTS
   - AMI ID: `ami-06e3c045d79fd65d9`
-- **Storage**: 64 GiB `gp3`
+- **Storage**: 64 GiB gp3
 - **Kernel**: 6.14.0-1018-aws
 - **Nitro Enclaves**: Enabled
 - **Nitro Enclaves CLI / driver**: v1.4.4
-- **Rust toolchain**: v1.90.0
+
+#### Ubuntu 24.04 (AArch64)
+
+- **Instance type**: `m6g.xlarge`
+  - vCPUs: 4
+  - Memory: 16 GiB
+  - CPU arch: AArch64
+- **AMI**: Ubuntu Server 24.04 LTS
+  - AMI ID: `ami-01da1dbf9ea3a6ee6`
+- **Storage**: 64 GiB gp3
+- **Kernel**: 6.14.0-1018-aws
+- **Nitro Enclaves**: Enabled
+- **Nitro Enclaves CLI / driver**: v1.4.4
 
 ### Enclave
 
 - **OS**: Ubuntu 24.04
 - **Allocated vCPUs**: 2
 - **Allocated Memory**: 512 MiB
-- **OS**: Ubuntu 24.04
-- **Rust toolchain**: v1.90.0
 
-### Client
+### Test configuration
 
-- Ran on the same Parent VM (localhost).
+- **Server (vsock proxy)**: Runs on localhost (`127.0.0.1`) on the Parent VM
+- **Client**: Runs on the same Parent VM
 
 ## Architecture
 
@@ -40,7 +55,7 @@ This repository demonstrates a simple end-to-end flow against an AWS Nitro Encla
 - `proxy/`: **untrusted** HTTP → vsock proxy (listens on HTTP `ip:port`, forwards to vsock `port=5000`)
 - `client/`: Client app (POSTs JSON to the proxy, verifies attestation, then calls the confidential computing API)
 
-## Quick start (all on the Parent VM)
+## Quick start
 
 Clone the repository:
 
@@ -49,17 +64,18 @@ git clone <THIS_REPOSITORY>
 cd <THIS_REPOSITORY>
 ```
 
-### 1. Parent VM setup (Ubuntu 24.04)
+### 1. Parent VM setup
 
 ```bash
 make setup-docker
 make setup-nitro-cli
 ```
 
-### 2. Client setup (this README runs it on the Parent VM)
+### 2. Client setup
 
 ```bash
 make setup-client
+make download-root-ca
 ```
 
 ### 3. Build the Enclave image and copy PCRs into `client-configs.json`
