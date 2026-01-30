@@ -1,0 +1,12 @@
+# Ignore all files in default
+*
+
+# Allow only necessary files for build
+!Cargo.toml
+!Cargo.lock
+!client/
+!client/**
+!enclave/
+!enclave/**
+!proxy/
+!proxy/**

@@ -1,21 +1,24 @@
 [package]
 name = "rafwne-client"
-version = "0.1.0"
-edition = "2024"
-rust-version = "1.90.0"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+authors.workspace = true
+license.workspace = true
+repository.workspace = true
 
 [dependencies]
-anyhow = "1.0.100"
-aws-nitro-enclaves-cose = "0.5.2"
-aws-lc-rs = "1.15.4"
-base64 = "0.22.1"
-hex = "0.4.3"
-openssl = "0.10.75"
-p256 = { version = "0.13.2", features = ["ecdh"] }
-serde = { version = "1.0.228", features = ["derive"] }
-serde_bytes = "0.11.19"
-serde_json = "1.0.149"
-serde_cbor = "0.11.2"
-ureq = "3.1.4"
-x509-parser = "0.18.0"
-p384 = { version = "0.13.1", features = ["ecdsa", "sha384"] }
+anyhow.workspace = true
+aws-nitro-enclaves-cose.workspace = true
+aws-lc-rs.workspace = true
+base64.workspace = true
+hex.workspace = true
+openssl.workspace = true
+p256 = { workspace = true, features = ["ecdh"] }
+p384 = { workspace = true, features = ["ecdsa", "sha384"] }
+serde = { workspace = true, features = ["derive"] }
+serde_bytes.workspace = true
+serde_cbor.workspace = true
+serde_json.workspace = true
+ureq.workspace = true
+x509-parser.workspace = true

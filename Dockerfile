@@ -14,7 +14,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
 COPY . /workspace
 
 # Release build
-RUN cargo build --release
+RUN cargo build --release -p rafwne-enclave
 
 # Minimal runtime image
 FROM debian:bookworm-slim AS runtime
