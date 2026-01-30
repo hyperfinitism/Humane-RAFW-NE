@@ -1,0 +1,19 @@
+name: SPDX Check
+
+on:
+  pull_request:
+  push:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  spdx:
+    name: spdx
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v4
+    - uses: enarx/spdx@master
+      with:
+        licenses: MIT
