@@ -44,9 +44,9 @@ download-root-ca:
 
 build-enclave:
 	@echo "Building Docker image"
-	@docker build -t rafwne-enclave ./enclave
+	@docker build -t rafwne-enclave .
 	@echo "Creating EIF file"
-	@nitro-cli build-enclave --docker-uri rafwne-enclave --output-file ./enclave/rafwne-enclave.eif
+	@nitro-cli build-enclave --docker-uri rafwne-enclave --output-file rafwne-enclave.eif
 
 build-proxy:
 	@echo "Building vsock proxy"
@@ -58,7 +58,7 @@ build-client:
 
 run-enclave:
 	@echo "Running Nitro Enclave"
-	@nitro-cli run-enclave --eif-path ./enclave/rafwne-enclave.eif --memory $(ENCLAVE_MEMORY) --cpu-count $(ENCLAVE_CPU_COUNT) --enclave-cid $(ENCLAVE_CID)
+	@nitro-cli run-enclave --eif-path rafwne-enclave.eif --memory $(ENCLAVE_MEMORY) --cpu-count $(ENCLAVE_CPU_COUNT) --enclave-cid $(ENCLAVE_CID)
 
 run-proxy:
 	@echo "Running vsock proxy"

@@ -1,7 +1,12 @@
+# File system related
 .DS_Store
 
+# Rust build artefacts
+target/
+
+# Nitro Enclaves related
+*.eif
+
+# AWS Nitro Root CA certificate
 AWS_NitroEnclaves_Root-G1.zip
 root.pem
-
-target/
-debug/

@@ -1,7 +1,38 @@
 [workspace]
 resolver = "3"
 members = [
-    "client",
+	"client",
 	"enclave",
 	"proxy",
 ]
+
+[workspace.package]
+version = "0.1.0"
+edition = "2024"
+rust-version = "1.90.0"
+authors = ["Acompany Co., Ltd."]
+license = ""
+repository = "https://github.com/acompany-develop/Humane-RAFW-NE"
+description = "Remote Attestation Framework for AWS Nitro Enclaves"
+readme = "README.md"
+exclude = [".gitignore", ".github/*"]
+
+[workspace.dependencies]
+anyhow = "1.0.100"
+aws-lc-rs = "1.15.4"
+aws-nitro-enclaves-nsm-api = "0.4.0"
+aws-nitro-enclaves-cose = "0.5.2"
+base64 = "0.22.1"
+clap = "4.5.54"
+hex = "0.4.3"
+openssl = "0.10.75"
+p256 = "0.13.2"
+p384 = "0.13.1"
+serde = "1.0.228"
+serde_bytes = "0.11.19"
+serde_cbor = "0.11.2"
+serde_json = "1.0.149"
+tiny_http = "0.12.0"
+ureq = "3.1.4"
+vsock = "0.5.2"
+x509-parser = "0.18.0"
