@@ -13,12 +13,11 @@ aws-nitro-enclaves-cose.workspace = true
 aws-lc-rs.workspace = true
 base64.workspace = true
 hex.workspace = true
+minicbor = { workspace = true, features = ["std"] }
 openssl.workspace = true
 p256 = { workspace = true, features = ["ecdh"] }
 p384 = { workspace = true, features = ["ecdsa", "sha384"] }
 serde = { workspace = true, features = ["derive"] }
-serde_bytes.workspace = true
-serde_cbor.workspace = true
 serde_json.workspace = true
 ureq.workspace = true
 x509-parser.workspace = true
