@@ -823,6 +823,12 @@ dependencies = [
 ]
 
 [[package]]
+name = "minicbor"
+version = "2.2.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "e70eae6d4f18f7d76877fe7b13f0bc21f7c2b7239d2041c338335f7b388d0dd7"
+
+[[package]]
 name = "minimal-lexical"
 version = "0.2.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -1076,12 +1082,11 @@ dependencies = [
  "aws-nitro-enclaves-cose",
  "base64",
  "hex",
+ "minicbor",
  "openssl",
  "p256",
  "p384",
  "serde",
- "serde_bytes",
- "serde_cbor",
  "serde_json",
  "ureq",
  "x509-parser",
