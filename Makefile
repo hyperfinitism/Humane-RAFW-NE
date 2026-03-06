@@ -1,6 +1,6 @@
 SHELL := /bin/bash
-
-.PHONY: help setup-docker setup-nitro-cli setup-client download-root-ca build-enclave build-proxy build-client run-enclave run-proxy run-client terminate-enclave
+.DELETE_ON_ERROR:
+.DEFAULT_GOAL := help
 
 ENCLAVE_CID ?= 16
 ENCLAVE_MEMORY ?= 512
@@ -9,68 +9,120 @@ ENCLAVE_CPU_COUNT ?= 2
 SERVER_IP ?= 127.0.0.1
 SERVER_PORT ?= 8080
 
-help:
-	@echo "Targets:"
-	@echo "  help              Show this help message"
-	@echo "  For Parent VM:"
-	@echo "    setup-docker      Install Docker (requires Ubuntu + sudo)"
-	@echo "    setup-nitro-cli   Install Nitro Enclaves Driver and CLI"
-	@echo "    build-enclave     Build enclave Docker image and create EIF file"
-	@echo "    build-proxy       Build vsock proxy"
-	@echo "    run-enclave       Run Nitro Enclave"
-	@echo "    run-proxy         Run vsock proxy"
-	@echo "    terminate-enclave Terminate Nitro Enclave"
-	@echo "  For Client:"
-	@echo "    setup-client      Install Rust and dependencies"
-	@echo "    build-client      Build client application"
-	@echo "    download-root-ca  Download AWS Nitro Enclaves root CA certificate"
-	@echo "    run-client        Run client"
+# ---------------------------------------------------------------------------
+# Help
+# ---------------------------------------------------------------------------
 
-setup-docker:
+COLOR_CYAN := "\033[36m"
+COLOR_RESET := "\033[0m"
+PADDING := 20
+
+.PHONY: help
+help: ## Show help
+	@printf "%-$(PADDING)s %s\n" "TARGET" "DESCRIPTION"
+	@grep -E '^[a-zA-Z_-]+:.*?## .*$$' $(MAKEFILE_LIST) | \
+		awk 'BEGIN {FS = ":.*?## "}; {printf $(COLOR_CYAN)"%-$(PADDING)s"$(COLOR_RESET) " %s\n", $$1, $$2}'
+
+# ---------------------------------------------------------------------------
+# Clean
+# ---------------------------------------------------------------------------
+
+.PHONY: clean
+clean: ## Clean build artifacts
+	@echo "Cleaning build artifacts"
+	cargo clean
+	-docker rmi rafwne-enclave
+	rm -f rafwne-enclave.eif
+	rm -f root.pem
+
+# ---------------------------------------------------------------------------
+# Setup
+# ---------------------------------------------------------------------------
+
+.PHONY: setup-docker
+setup-docker: ## Install Docker (requires Ubuntu + sudo)
 	@echo "Running scripts/setup-docker.sh"
-	@bash ./scripts/setup-docker.sh
+	bash ./scripts/setup-docker.sh
 
-setup-nitro-cli:
+.PHONY: setup-nitro-cli
+setup-nitro-cli: ## Install Nitro Enclaves Driver and CLI
 	@echo "Running scripts/setup-nitro-cli.sh"
-	@bash ./scripts/setup-nitro-cli.sh
+	bash ./scripts/setup-nitro-cli.sh
 
-setup-client:
+.PHONY: setup-client
+setup-client: ## Install Rust and dependencies
 	@echo "Running scripts/setup-client.sh"
-	@bash ./scripts/setup-client.sh
+	bash ./scripts/setup-client.sh
 
-download-root-ca:
+.PHONY: download-root-ca
+download-root-ca: ## Download AWS Nitro Enclaves root CA certificate
 	@echo "Running scripts/download-root-ca.sh"
-	@bash ./scripts/download-root-ca.sh
+	bash ./scripts/download-root-ca.sh
 
-build-enclave:
+# ---------------------------------------------------------------------------
+# Build
+# ---------------------------------------------------------------------------
+
+rafwne-enclave.eif: ## Build enclave Docker image and create EIF file
 	@echo "Building Docker image"
-	@docker build -t rafwne-enclave .
+	docker build -t rafwne-enclave .
 	@echo "Creating EIF file"
-	@nitro-cli build-enclave --docker-uri rafwne-enclave --output-file rafwne-enclave.eif
+	nitro-cli build-enclave --docker-uri rafwne-enclave --output-file rafwne-enclave.eif
 
-build-proxy:
+.PHONY: build-enclave
+build-enclave: rafwne-enclave.eif
+
+target/release/rafwne-proxy:
 	@echo "Building vsock proxy"
-	@cargo build -p rafwne-proxy -r
+	cargo build -p rafwne-proxy -r
 
-build-client:
+.PHONY: build-proxy
+build-proxy: target/release/rafwne-proxy ## Build vsock proxy
+
+target/release/rafwne-client:
 	@echo "Building client crate (release)"
-	@cargo build -p rafwne-client -r
+	cargo build -p rafwne-client -r
 
-run-enclave:
+.PHONY: build-client
+build-client: target/release/rafwne-client ## Build client application
+
+# ---------------------------------------------------------------------------
+# Run
+# ---------------------------------------------------------------------------
+
+.PHONY: run-enclave
+run-enclave: rafwne-enclave.eif ## Run Nitro Enclave
 	@echo "Running Nitro Enclave"
-	@nitro-cli run-enclave --eif-path rafwne-enclave.eif --memory $(ENCLAVE_MEMORY) --cpu-count $(ENCLAVE_CPU_COUNT) --enclave-cid $(ENCLAVE_CID)
+	nitro-cli run-enclave \
+		--eif-path rafwne-enclave.eif \
+		--memory $(ENCLAVE_MEMORY) \
+		--cpu-count $(ENCLAVE_CPU_COUNT) \
+		--enclave-cid $(ENCLAVE_CID)
 
-run-proxy:
+.PHONY: run-proxy
+run-proxy: target/release/rafwne-proxy ## Run vsock proxy
 	@echo "Running vsock proxy"
-	@cargo run --release -p rafwne-proxy -- --ip $(SERVER_IP) --port $(SERVER_PORT) --cid $(ENCLAVE_CID)
+	./target/release/rafwne-proxy \
+		--ip $(SERVER_IP) \
+		--port $(SERVER_PORT) \
+		--cid $(ENCLAVE_CID)
 
-run-client:
+.PHONY: run-client
+run-client: target/release/rafwne-client root.pem ## Run client application
 	@echo "Running client"
-	@cargo run --release -p rafwne-client
+	./target/release/rafwne-client
 
-terminate-enclave:
+# ---------------------------------------------------------------------------
+# Terminate
+# ---------------------------------------------------------------------------
+
+.PHONY: terminate-enclave
+terminate-enclave: ## Terminate Nitro Enclave
 	@echo "Terminating Nitro Enclave"
-	@ENCLAVE_ID="$$(nitro-cli describe-enclaves | jq -r '.[] | select(.State == "RUNNING" and .EnclaveCID == $(ENCLAVE_CID)) | .EnclaveID' | head -n1)"; \
+	@ENCLAVE_ID=$$(nitro-cli describe-enclaves \
+		| jq -r --argjson cid $(ENCLAVE_CID) \
+			'.[] | select(.State == "RUNNING" and .EnclaveCID == $$cid) | .EnclaveID' \
+		| head -n1); \
 	if [ -z "$$ENCLAVE_ID" ]; then \
 		echo "ERROR: running enclave with CID=$(ENCLAVE_CID) not found"; \
 		nitro-cli describe-enclaves; \
