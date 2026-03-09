@@ -1,7 +1,7 @@
 FROM rust:1.90-bookworm AS builder
 WORKDIR /workspace
 
-# Native deps (bindgen/crypto crates) + certs
+# Native deps + CA certs
 RUN apt-get update && apt-get install -y --no-install-recommends \
     clang \
     libclang-dev \
@@ -18,6 +18,7 @@ RUN cargo build --release -p rafwne-enclave
 
 # Minimal runtime image
 FROM debian:bookworm-slim AS runtime
+
 RUN apt-get update && apt-get install -y --no-install-recommends \
     ca-certificates \
  && rm -rf /var/lib/apt/lists/*
