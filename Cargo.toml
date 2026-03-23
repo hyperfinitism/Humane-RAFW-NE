@@ -19,7 +19,7 @@ exclude = [".gitignore", ".github/*"]
 
 [workspace.dependencies]
 anyhow = "1.0.100"
-aws-lc-rs = "1.16.1"
+aws-lc-rs = "1.16.2"
 aws-nitro-enclaves-cose = "0.5.2"
 aws-nitro-enclaves-nsm-api = "0.4.0"
 base64 = "0.22.1"
