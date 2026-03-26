@@ -507,8 +507,10 @@ Behavior depends on which optional fields are provided:
 5. **Forward secrecy** — Ephemeral ECDH keypairs are generated per session;
    compromising one session does not affect others.
 6. **Hardware-rooted trust** — The attestation document is signed by the Nitro
-   Secure Module, whose certificate chain roots to the AWS Nitro Enclaves root
-   CA.
+   Hypervisor via the Nitro Secure Module, whose certificate chain roots to the
+   AWS Nitro Enclaves root CA.
+   The Nitro hypervisor is secure-booted with the aid of the hardware
+   components of the Nitro System.
 
 ### Trust Assumptions
 
