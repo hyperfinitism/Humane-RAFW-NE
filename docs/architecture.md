@@ -36,7 +36,7 @@ graph TD
 
 | Component | Trust | Notes |
 | --------- | ----- | ----- |
-| **EC2 Host** | Trusted | Powered by **AWS Nitro System**. It consists of **Nitro Cards** (SoC/ASICs separated from the main board), **Nitro Security Chip** (HSM-like security chip integrated into the main board), and **Nitro Hypervisor** (minimalistic firmware-like hypervisor). |
+| **EC2 Host** | Trusted | Powered by **AWS Nitro System**. It consists of **Nitro Cards** (SoC/ASICs separated from the main board), **Nitro Security Chip** (Security chip integrated into the main board), and **Nitro Hypervisor** (minimalistic firmware-like hypervisor). |
 | **Parent EC2 Instance** / Proxy | Untrusted | Standard EC2 instance; the proxy can observe encrypted traffic but cannot decrypt or tamper with it |
 | **Nitro Enclave** | Trusted / Attestable | Isolated VM with no persistent storage, no network, and no interactive access — even the Parent VM operator cannot inspect its memory |
 | **Client** | — | Trusts the AWS Nitro Enclaves root CA; verifies enclave identity through remote attestation |
