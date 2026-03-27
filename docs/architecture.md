@@ -525,12 +525,14 @@ Behavior depends on which optional fields are provided:
 ## References
 
 - AWS.
-  [AWS Whitepaper - The Security Design of the AWS Nitro System](https://docs.aws.amazon.com/pdfs/whitepapers/latest/security-design-of-aws-nitro-system/security-design-of-aws-nitro-system.pdf) (PDF).
+  [AWS Whitepaper - The Security Design of the AWS Nitro System](https://docs.aws.amazon.com/pdfs/whitepapers/latest/security-design-of-aws-nitro-system/security-design-of-aws-nitro-system.pdf),
+  (PDF).
 - AWS.
-  [User Guide - AWS Nitro Enclaves](https://docs.aws.amazon.com/pdfs/enclaves/latest/user/enclaves-user.pdf) (PDF).
+  [User Guide - AWS Nitro Enclaves](https://docs.aws.amazon.com/pdfs/enclaves/latest/user/enclaves-user.pdf)
+  (PDF).
 - AWS.
-  [User Guide - Amazon Elastic Compute Cloud](https://docs.aws.amazon.com/pdfs/AWSEC2/latest/UserGuide/ec2-ug.pdf) (PDF),
-  pp. 3070-3103.
+  [User Guide - Amazon Elastic Compute Cloud](https://docs.aws.amazon.com/pdfs/AWSEC2/latest/UserGuide/ec2-ug.pdf)
+  (PDF), pp. 3070-3103.
 - AWS.
   [Nitro Enclaves Command Line Interface (Nitro CLI)](https://github.com/aws/aws-nitro-enclaves-cli),
   GitHub repository.

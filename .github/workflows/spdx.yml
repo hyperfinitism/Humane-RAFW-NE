@@ -2,7 +2,18 @@ name: SPDX Check
 
 on:
   pull_request:
+    paths:
+      - '**/*.rs'
+      - '**/*.sh'
+      - '.github/workflows/spdx.yml'
   push:
+    branches:
+      - main
+    paths:
+      - '**/*.rs'
+      - '**/*.sh'
+      - '.github/workflows/spdx.yml'
+  workflow_dispatch:
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
