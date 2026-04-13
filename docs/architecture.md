@@ -224,7 +224,8 @@ representation (`#[serde(tag = "type")]`).
 | `init` | *(none)* | Start a new session |
 | `key-exchange` | `session_id`, `client_pubkey_b64` | Complete ECDH and request attestation |
 | `add` | `session_id`, `x: EncryptedBlob`, `y: EncryptedBlob` | Addition |
-| `close` | `session_id` | Close session and wipe keys |
+| `close-challenge` | `session_id` | Request a close challenge (step 1) |
+| `close` | `session_id`, `response_b64` | Close session with challenge response (step 2) |
 | `attest` | `session_id?`, `user_data_b64?`, `nonce_b64?` | Request an attestation document on demand |
 
 #### Responses (Enclave → Client)
@@ -234,6 +235,7 @@ representation (`#[serde(tag = "type")]`).
 | `init` | `session_id`, `enclave_pubkey_b64` | Session created |
 | `key-exchange` | `attestation_document_b64` | Attestation document (COSE_Sign1, base64) |
 | `add` | `sum: EncryptedBlob` | Encrypted result |
+| `close-challenge` | `challenge_b64` | 32-byte random challenge (base64) |
 | `close-ok` | *(none)* | Session closed |
 | `attest` | `attestation_document_b64` | Attestation document |
 | `error` | `error` | Error message string |
@@ -310,10 +312,20 @@ sequenceDiagram
     P-->>C: HTTP 200 (same JSON)
     Note over C: Decrypt sum with MK
 
-    Note over C,E: Phase 5 — Session Close
+    Note over C,E: Phase 5 — Session Close (Challenge-Response)
 
-    C->>P: POST / {"type":"close", "session_id":"..."}
+    C->>P: POST / {"type":"close-challenge", "session_id":"..."}
     P->>E: vsock: (same JSON)
+    E->>N: GetRandom (32 bytes for challenge)
+    N-->>E: random bytes
+    Note over E: Store challenge in session
+    E-->>P: {"type":"close-challenge", "challenge_b64":"..."}
+    P-->>C: HTTP 200 (same JSON)
+
+    Note over C: Compute response =<br/>HMAC-SHA256(SK, challenge)
+    C->>P: POST / {"type":"close", "session_id":"...", "response_b64":"..."}
+    P->>E: vsock: (same JSON)
+    Note over E: Verify HMAC-SHA256(SK, challenge) == response
     Note over E: Delete session (wipe keys)
     E-->>P: {"type":"close-ok"}
     P-->>C: HTTP 200 (same JSON)
@@ -504,9 +516,15 @@ Behavior depends on which optional fields are provided:
 4. **Output confidentiality & authenticity** — Enclave outputs are returned as
    AES-128-GCM (MK). A network attacker (or the untrusted proxy) cannot modify
    ciphertexts without detection by the client.
-5. **Forward secrecy** — Ephemeral ECDH keypairs are generated per session;
+5. **Session close authentication** — Session close uses a challenge-response
+   protocol: the enclave issues a 32-byte random challenge, and the client must
+   respond with `HMAC-SHA256(SK, challenge)`. Since SK is derived from the ECDH
+   shared secret, only the legitimate client (who participated in the key
+   exchange) can compute the correct response. This prevents an attacker who
+   has observed the session ID from forcibly closing the session (DoS).
+6. **Forward secrecy** — Ephemeral ECDH keypairs are generated per session;
    compromising one session does not affect others.
-6. **Hardware-rooted trust** — The attestation document is signed by the Nitro
+7. **Hardware-rooted trust** — The attestation document is signed by the Nitro
    Hypervisor via the Nitro Secure Module, whose certificate chain roots to the
    AWS Nitro Enclaves root CA.
    The Nitro hypervisor is secure-booted with the aid of the hardware

@@ -24,8 +24,12 @@ pub enum Request {
         x: EncryptedBlob,
         y: EncryptedBlob,
     },
+    CloseChallenge {
+        session_id: String,
+    },
     Close {
         session_id: String,
+        response_b64: String,
     },
     Attest {
         session_id: Option<String>,
@@ -46,6 +50,9 @@ pub enum Response {
     },
     Add {
         sum: EncryptedBlob,
+    },
+    CloseChallenge {
+        challenge_b64: String,
     },
     CloseOk {},
     Attest {

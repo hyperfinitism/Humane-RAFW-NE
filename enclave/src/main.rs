@@ -213,7 +213,42 @@ pub(crate) fn handle_vsock_stream(stream: &mut VsockStream, max_request_size: us
                 let response_str = response.to_json()?;
                 write_response(stream, response_str.as_bytes())?;
             }
-            types::Request::Close { session_id } => {
+            types::Request::CloseChallenge { session_id } => {
+                let sess = session::get_session(&session_id)?;
+                // Require key exchange to have completed (SK must exist)
+                if sess.sk.is_none() {
+                    return Err(anyhow::anyhow!("key exchange not completed"));
+                }
+                let challenge = session::set_close_challenge(&session_id)?;
+                let response = types::Response::CloseChallenge {
+                    challenge_b64: crypto::b64_encode(&challenge),
+                };
+                let response_str = response.to_json()?;
+                write_response(stream, response_str.as_bytes())?;
+            }
+            types::Request::Close {
+                session_id,
+                response_b64,
+            } => {
+                let sess = session::get_session(&session_id)?;
+                let sk = sess
+                    .sk
+                    .as_ref()
+                    .ok_or_else(|| anyhow::anyhow!("SK not set"))?;
+                let challenge = sess
+                    .close_challenge
+                    .as_ref()
+                    .ok_or_else(|| anyhow::anyhow!("no pending close challenge"))?;
+
+                // Verify: response == HMAC-SHA256(SK, challenge)
+                let expected = crypto::hmac_sha256(sk, challenge);
+                let actual = crypto::b64_decode(&response_b64)?;
+                if expected != actual {
+                    return Err(anyhow::anyhow!(
+                        "close challenge-response verification failed"
+                    ));
+                }
+
                 session::delete_session(&session_id)?;
                 let response = types::Response::CloseOk {};
                 let response_str = response.to_json()?;
