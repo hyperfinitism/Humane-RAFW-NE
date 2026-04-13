@@ -16,6 +16,12 @@ pub(crate) fn derive_key(shared_secret: &[u8], label: &[u8]) -> Vec<u8> {
     hmac::sign(&key, label).as_ref().to_vec()
 }
 
+/// Compute HMAC-SHA256(key, data) and return the 32-byte tag.
+pub(crate) fn hmac_sha256(key_bytes: &[u8], data: &[u8]) -> Vec<u8> {
+    let key = hmac::Key::new(hmac::HMAC_SHA256, key_bytes);
+    hmac::sign(&key, data).as_ref().to_vec()
+}
+
 pub(crate) fn b64_encode(data: &[u8]) -> String {
     B64.encode(data)
 }

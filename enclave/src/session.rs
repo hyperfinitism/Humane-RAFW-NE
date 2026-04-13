@@ -23,6 +23,9 @@ pub(crate) struct Session {
     pub sk: Option<Vec<u8>>,
     pub mk: Option<Vec<u8>>,
     pub vk: Option<Vec<u8>>,
+
+    /// 32-byte close challenge (set by CloseChallenge, consumed by Close).
+    pub close_challenge: Option<Vec<u8>>,
 }
 
 static SESSIONS: OnceLock<Mutex<HashMap<String, Session>>> = OnceLock::new();
@@ -74,6 +77,7 @@ pub(crate) fn new_session() -> Result<Session> {
         sk: None,
         mk: None,
         vk: None,
+        close_challenge: None,
     })
 }
 
@@ -107,6 +111,7 @@ pub(crate) fn get_session(session_id: &str) -> Result<Session> {
             sk: s.sk.clone(),
             mk: s.mk.clone(),
             vk: s.vk.clone(),
+            close_challenge: s.close_challenge.clone(),
         })
         .ok_or_else(|| anyhow!("unknown session_id"))
 }
@@ -117,6 +122,19 @@ pub(crate) fn put_session(sess: Session) -> Result<()> {
         .map_err(|_| anyhow!("session mutex poisoned"))?;
     map.insert(sess.session_id.clone(), sess);
     Ok(())
+}
+
+/// Generate and store a 32-byte close challenge for the session.
+pub(crate) fn set_close_challenge(session_id: &str) -> Result<Vec<u8>> {
+    let challenge = nsm_random_bytes(32)?;
+    let mut map = sessions()
+        .lock()
+        .map_err(|_| anyhow!("session mutex poisoned"))?;
+    let sess = map
+        .get_mut(session_id)
+        .ok_or_else(|| anyhow!("unknown session_id"))?;
+    sess.close_challenge = Some(challenge.clone());
+    Ok(challenge)
 }
 
 pub(crate) fn delete_session(session_id: &str) -> Result<()> {

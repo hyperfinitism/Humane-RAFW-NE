@@ -185,9 +185,25 @@ fn main() -> Result<()> {
     );
     println!("decrypted sum={sum}");
 
-    // 6. Close
+    // 6. Close (challenge-response)
+    // 6a. Request close challenge
+    let challenge_req = types::Request::CloseChallenge {
+        session_id: session_id.clone(),
+    }
+    .to_json()?;
+    let challenge_resp = post_json(&server, &challenge_req)?;
+    let challenge_resp: types::Response = types::Response::from_json(&challenge_resp)?;
+    let challenge = match challenge_resp {
+        types::Response::CloseChallenge { challenge_b64 } => crypto::b64_decode(&challenge_b64)?,
+        types::Response::Error { error } => return Err(anyhow!("close-challenge failed: {error}")),
+        other => return Err(anyhow!("unexpected close-challenge response: {other:?}")),
+    };
+
+    // 6b. Compute response = HMAC-SHA256(SK, challenge) and send close
+    let response = crypto::hmac_sha256(&sk, &challenge);
     let close_req = types::Request::Close {
         session_id: session_id.clone(),
+        response_b64: crypto::b64_encode(&response),
     }
     .to_json()?;
     let close_resp = post_json(&server, &close_req)?;

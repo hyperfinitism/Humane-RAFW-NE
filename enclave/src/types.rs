@@ -26,8 +26,14 @@ pub enum Request {
         y: EncryptedBlob,
     },
 
-    /// Close the session and wipe keys.
-    Close { session_id: String },
+    /// Request a close challenge (step 1 of challenge-response close).
+    CloseChallenge { session_id: String },
+
+    /// Close the session with a challenge response (step 2).
+    Close {
+        session_id: String,
+        response_b64: String,
+    },
 
     /// Request an attestation document anytime.
     ///
@@ -59,6 +65,9 @@ pub enum Response {
     },
     Add {
         sum: EncryptedBlob,
+    },
+    CloseChallenge {
+        challenge_b64: String,
     },
     CloseOk {},
     Attest {
